@@ -1,1 +1,3 @@
 # bgbots
+
+Have bots play games so you don't have to...
