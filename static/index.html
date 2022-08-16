@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+
+  <title>Lucky</title>
+
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="./app.css">
+</head>
+
+<body>
+
+  <!-- PAGE HTML -->
+  <div class="page-cont">
+    <div id="app"></div>
+  </div>
+
+  <div id="gameupdates">Game Updates</div>
+
+  <!-- PAGE JS Imports
+  <script type="text/javascript" src="./utilities.js"></script>
+
+  <script type="text/javascript" src="./mealplanningEntityData.js"></script>
+   -->
+
+  <script type="text/javascript" src="./app.js"></script>
+
+  <!-- PAGE JS -->
+  <script>
+    let APP = new App().spawn("app");
+
+    let element = document.querySelector("#gameupdates");
+
+    element.addEventListener(
+      'click',
+      (event) => {
+        console.log("Clicked!");
+        console.log(APP);
+
+        fetch(
+          '/game_updates',
+          {
+            method: "POST",
+            body: JSON.stringify({
+              "gameId": APP.gameId,
+            })
+          }
+        )
+        .then((response) => response.json())
+        .then((data) => console.log(data));
+      },
+    );
+
+
+  </script>
+
+</body>
+</html>

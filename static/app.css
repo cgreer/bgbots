@@ -1,0 +1,222 @@
+/*********
+General
+*********/
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:link {
+
+}
+
+a:visited {
+
+}
+
+html, body {
+  overflow-x: hidden; /* stop scrolling */
+}
+
+body {
+  position: relative; /* necessary for stopping scrolling */
+  margin: 0px 0px;
+  font-family: 'Lato', sans-serif;
+}
+
+.no-highlights {
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  /*-webkit-touch-callout: none;*/
+  /*-webkit-user-select: none;*/
+  /*-khtml-user-select: none;*/
+  /*-moz-user-select: none;*/
+  /*-ms-user-select: none;*/
+  /*user-select: none;*/
+}
+
+
+/*********
+Helpers
+*********/
+
+.aligncenter {
+  display: block;
+  margin-top: 0 px;
+  margin-right: auto;
+  margin-bottom: 0px;
+  margin-left: auto;
+}
+
+.flex-row-st-st {display: flex; flex-direction: row; justify-content: flex-start; align-items: flex-start;}
+.flex-row-st-en {display: flex; flex-direction: row; justify-content: flex-start; align-items: flex-end;}
+.flex-row-st-ce {display: flex; flex-direction: row; justify-content: flex-start; align-items: center;}
+.flex-row-st-st {display: flex; flex-direction: row; justify-content: flex-start; align-items: stretch;}
+.flex-row-st-ba {display: flex; flex-direction: row; justify-content: flex-start; align-items: baseline;}
+.flex-row-en-st {display: flex; flex-direction: row; justify-content: flex-end; align-items: flex-start;}
+.flex-row-en-en {display: flex; flex-direction: row; justify-content: flex-end; align-items: flex-end;}
+.flex-row-en-ce {display: flex; flex-direction: row; justify-content: flex-end; align-items: center;}
+.flex-row-en-st {display: flex; flex-direction: row; justify-content: flex-end; align-items: stretch;}
+.flex-row-en-ba {display: flex; flex-direction: row; justify-content: flex-end; align-items: baseline;}
+.flex-row-ce-st {display: flex; flex-direction: row; justify-content: center; align-items: flex-start;}
+.flex-row-ce-en {display: flex; flex-direction: row; justify-content: center; align-items: flex-end;}
+.flex-row-ce-ce {display: flex; flex-direction: row; justify-content: center; align-items: center;}
+.flex-row-ce-st {display: flex; flex-direction: row; justify-content: center; align-items: stretch;}
+.flex-row-ce-ba {display: flex; flex-direction: row; justify-content: center; align-items: baseline;}
+.flex-row-be-st {display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start;}
+.flex-row-be-en {display: flex; flex-direction: row; justify-content: space-between; align-items: flex-end;}
+.flex-row-be-ce {display: flex; flex-direction: row; justify-content: space-between; align-items: center;}
+.flex-row-be-st {display: flex; flex-direction: row; justify-content: space-between; align-items: stretch;}
+.flex-row-be-ba {display: flex; flex-direction: row; justify-content: space-between; align-items: baseline;}
+.flex-row-ar-st {display: flex; flex-direction: row; justify-content: space-around; align-items: flex-start;}
+.flex-row-ar-en {display: flex; flex-direction: row; justify-content: space-around; align-items: flex-end;}
+.flex-row-ar-ce {display: flex; flex-direction: row; justify-content: space-around; align-items: center;}
+.flex-row-ar-st {display: flex; flex-direction: row; justify-content: space-around; align-items: stretch;}
+.flex-row-ar-ba {display: flex; flex-direction: row; justify-content: space-around; align-items: baseline;}
+.flex-row-ev-st {display: flex; flex-direction: row; justify-content: space-evenly; align-items: flex-start;}
+.flex-row-ev-en {display: flex; flex-direction: row; justify-content: space-evenly; align-items: flex-end;}
+.flex-row-ev-ce {display: flex; flex-direction: row; justify-content: space-evenly; align-items: center;}
+.flex-row-ev-st {display: flex; flex-direction: row; justify-content: space-evenly; align-items: stretch;}
+.flex-row-ev-ba {display: flex; flex-direction: row; justify-content: space-evenly; align-items: baseline;}
+.flex-col-st-st {display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start;}
+.flex-col-st-en {display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end;}
+.flex-col-st-ce {display: flex; flex-direction: column; justify-content: flex-start; align-items: center;}
+.flex-col-st-st {display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;}
+.flex-col-st-ba {display: flex; flex-direction: column; justify-content: flex-start; align-items: baseline;}
+.flex-col-en-st {display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;}
+.flex-col-en-en {display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end;}
+.flex-col-en-ce {display: flex; flex-direction: column; justify-content: flex-end; align-items: center;}
+.flex-col-en-st {display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch;}
+.flex-col-en-ba {display: flex; flex-direction: column; justify-content: flex-end; align-items: baseline;}
+.flex-col-ce-st {display: flex; flex-direction: column; justify-content: center; align-items: flex-start;}
+.flex-col-ce-en {display: flex; flex-direction: column; justify-content: center; align-items: flex-end;}
+.flex-col-ce-ce {display: flex; flex-direction: column; justify-content: center; align-items: center;}
+.flex-col-ce-st {display: flex; flex-direction: column; justify-content: center; align-items: stretch;}
+.flex-col-ce-ba {display: flex; flex-direction: column; justify-content: center; align-items: baseline;}
+.flex-col-be-st {display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start;}
+.flex-col-be-en {display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;}
+.flex-col-be-ce {display: flex; flex-direction: column; justify-content: space-between; align-items: center;}
+.flex-col-be-st {display: flex; flex-direction: column; justify-content: space-between; align-items: stretch;}
+.flex-col-be-ba {display: flex; flex-direction: column; justify-content: space-between; align-items: baseline;}
+.flex-col-ar-st {display: flex; flex-direction: column; justify-content: space-around; align-items: flex-start;}
+.flex-col-ar-en {display: flex; flex-direction: column; justify-content: space-around; align-items: flex-end;}
+.flex-col-ar-ce {display: flex; flex-direction: column; justify-content: space-around; align-items: center;}
+.flex-col-ar-st {display: flex; flex-direction: column; justify-content: space-around; align-items: stretch;}
+.flex-col-ar-ba {display: flex; flex-direction: column; justify-content: space-around; align-items: baseline;}
+.flex-col-ev-st {display: flex; flex-direction: column; justify-content: space-evenly; align-items: flex-start;}
+.flex-col-ev-en {display: flex; flex-direction: column; justify-content: space-evenly; align-items: flex-end;}
+.flex-col-ev-ce {display: flex; flex-direction: column; justify-content: space-evenly; align-items: center;}
+.flex-col-ev-st {display: flex; flex-direction: column; justify-content: space-evenly; align-items: stretch;}
+.flex-col-ev-ba {display: flex; flex-direction: column; justify-content: space-evenly; align-items: baseline;}
+
+/*********
+Page containers
+*********/
+
+.page-cont {
+  display: block;
+  margin: 0 auto;
+  max-width: 1630px;
+}
+
+
+.ui-cont {
+  margin-top: 20px;
+  width: 100%;
+  text-align: center;
+  height: 884px;
+}
+
+.board-cont {
+  width: 80%;
+  height: 100%;
+  border-radius: 20px;
+  background: #eeeeee;
+}
+
+.input-cont {
+  margin-left: 10px;
+  width: 20%;
+  height: 100%;
+  background: lightgray;
+  border-radius: 20px;
+}
+
+
+/*****************/
+/* Generic for application */
+/*****************/
+.button {
+  cursor: pointer;
+}
+
+
+/*****************/
+/* Board
+/*****************/
+
+.board {
+  font-size: 40px;
+  cursor: pointer;
+}
+
+/*********
+Input Area
+*********/
+
+.inputarea {
+  width: 100%;
+}
+
+.inputarea > .prompt {
+  margin: 20px 0px 20px 0px;
+
+  font-size: 25px;
+}
+
+.inputarea > .action {
+  width: 70%;
+  margin: 5px 0px;
+  padding: 4px;
+
+  text-align: center;
+  font-size: 20px;
+  color: white;
+
+  background: gray;
+  border: 1px solid;
+  border-radius: 6px;
+
+  cursor: pointer;
+}
+
+.inputarea > .actioninfo {
+  margin: 5px 0px;
+  padding: 4px;
+
+  text-align: center;
+  font-size: 20px;
+}
+
+.inputarea .rightarrow,.leftarrow {
+  margin: 0px 3px;
+  padding: 6px;
+
+  font-size: 20px;
+  color: white;
+
+  background: gray;
+  border: 1px solid;
+  border-radius: 6px;
+}
+
+
+
+/*****************/
+/* GENERIC (High priority) */
+/*****************/
+
+.hidden {
+  display: none;
+}
+
