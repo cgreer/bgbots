@@ -15,7 +15,6 @@ enu = enumerate
 
 @dataclass
 class State(BaseState):
-    acting_agent: int
     boxes: List[int]
     prize: int
 
@@ -94,14 +93,23 @@ class Environment(BaseEnvironment):
             choices=choices,
         )
 
-    def transition(self, state, action):
+    def transition(self, state, action) -> State:
+        # Build next state
         acting_agent = 1 if state.acting_agent == 0 else 0
-        boxes = state.boxes[:]
+        boxes = state.boxes[:] # Copy the previous boxes
+
+        # Player chose action x which corresponds to index x in boxes,
+        # and add 1 to make it "player 1" instead of "Player 0"
+        # [0, 0, 0]
+        # [0, 1, 0]
         boxes[action] = state.acting_agent + 1
+
+        # Build the UI choices
         choices = []
         for i, bstate in enumerate(boxes):
             if bstate == 0:
                 choices.append(str(i))
+
         return State(
             acting_agent=acting_agent,
             boxes=boxes,
