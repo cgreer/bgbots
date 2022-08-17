@@ -40,6 +40,7 @@ iter_face_up_cards() [DONE]
     same as eligible_cards_flip()
 eligible_pick_ups() [DONE]
 
+
 effects:
     move_player() [DONE]
     flip_card() [DONE]
@@ -49,9 +50,12 @@ effects:
     pick_up_one(coord, resource) [DONE]
     pick_up_all(coord) [DONE]
 
+
 display:
     console display...
 
+transitions:
+    All of them...
 '''
 from random import choice
 
@@ -313,16 +317,6 @@ class State(BaseState):
             return [-1.0]
 
 
-class Choices:
-
-    @staticmethod
-    def player_location(state, player, setup):
-        state.prompt = "Choose player location"
-        state.phase = state.phase # nothing changes
-        state.subphase = "place_p1"
-        state.choices = state.player_loc_choices(player=1)
-
-
 @dataclass
 class Environment(BaseEnvironment):
     NAME = "Gatherer"
@@ -410,8 +404,6 @@ class Environment(BaseEnvironment):
             pass
 
         return state
-
-
 
     def parse_action_input(self, input_string):
         '''Used for converting human input to action'''
