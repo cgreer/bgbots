@@ -5,15 +5,15 @@ Game Process
 
 Setup:
     - Choose gatherer position
-    - Choose player token positions
 
 Turn Process:
-    - Choice Where to move player token to?
+    - Choice Where to move next player token to?
     - Choice: Want to use cultural?
     - Choice: Which card to flip face up in row/col?
     - Adjudicate row/col effects
-        - For face-up card in row/col:
+        - For cell w/ face-up card in row/col:
             - Spend/Place resources
+                - Choice: Place Resource
     - Move the gatherer
         - For face-up card in row/col:
             - Move gatherer in card's direction
@@ -39,7 +39,7 @@ eligible_placements(origin_coords, placed_coords)
 iter_face_up_cards() [DONE]
     same as eligible_cards_flip()
 eligible_pick_ups() [DONE]
-
+copy()
 
 effects:
     move_player() [DONE]
@@ -61,7 +61,8 @@ from random import choice
 
 from dataclasses import dataclass
 from typing import (
-    # Any,
+    Any,
+    Callable,
     List,
     Tuple,
 )
@@ -89,6 +90,18 @@ def parse_coords(coords: str):
     return row, col
 
 
+@dataclass
+class Choice:
+    choice: str
+    on_choice: Tuple[Callable, Any] # fxn, arg1, arg2, ...
+
+    def copy(self):
+        return Choice(
+            self.choice,
+            self.on_choice
+        )
+
+
 STARTING_RES = 5
 MAX_RES = 999
 
@@ -101,6 +114,8 @@ class CulturalCard:
 
 
 IsSpend = int # 0:spend, 1:place
+SPEND_EFFECT = 0
+PLACE_EFFECT = 1
 Amount = int
 Resource = int # 0:water, 1:food, 2:energy
 Direction = int # up, right, down, left
@@ -110,7 +125,7 @@ Direction = int # up, right, down, left
 class EffectCard:
     face_up: bool
     direction: Direction
-    row_effect: Tuple[IsSpend, Amount, Resource]
+    row_effect: Tuple[IsSpend, Amount, Resource] # XXX: Change to List[...]
     col_effect: Tuple[IsSpend, Amount, Resource]
 
     @classmethod
@@ -142,6 +157,187 @@ class Cell(BaseState):
     food: int
     energy: int
 
+    def res_sum(self):
+        return self.water + self.food + self.energy
+
+
+class CommonTrans:
+
+    @staticmethod
+    def choose_player_location(state, acting_player, after):
+        state.prompt = "Move player {acting_player + 1}"
+        state.choices = []
+        for location in state.eligible_player_movements(acting_player):
+            state.choices.append(Choice(
+                f"Location {location}",
+                after,
+            ))
+
+    @staticmethod
+    def choose_gatherer_position(state, after):
+        state.prompt = "Choose gatherer position"
+        state.choices = []
+        for row in range(4):
+            for col in range(4):
+                state.choices.append(Choice(
+                    f"Position: ({row}, {col})",
+                    after,
+                ))
+
+
+class SetupTrans:
+
+    @staticmethod
+    def setup(state):
+        after = (TurnTrans.start_turn, 0)
+        state.call(CommonTrans.choose_gatherer_position, after)
+
+
+class TurnTrans:
+
+    @staticmethod
+    def start_turn(state, acting_player):
+        after = (TurnTrans.choose_card_flip,)
+        state.call(
+            TurnTrans.choose_player_location,
+            acting_player,
+            after,
+        )
+
+    @staticmethod
+    def end_turn(state):
+        next_player = state.next_active_player()
+        state.call(TurnTrans.start_turn, next_player)
+
+    @staticmethod
+    def choose_card_flip(state):
+        state.prompt = "Choose card to flip"
+        state.choices = []
+        for row, col in eli_card_flips():
+            on_choice = (TurnTrans.on_flip_choice, row, col)
+            state.choices.append(Choice(
+                f"Coordinate: ({row}, {col})",
+                on_choice,
+            ))
+
+    @staticmethod
+    def on_flip_choice(state, row, col):
+        state.flip_card(row, col)
+        state.call(TurnTrans.adjudicate_effects, 0)
+
+    @staticmethod
+    def adjudicate_effects(state):
+        state.adj_effects = fup_effects()[::-1] # reverse ordered?
+        state.call(TurnTrans.adjudicate_effects_loop)
+
+    @staticmethod
+    def adjudicate_effects_loop(state):
+        '''
+        Go through state.adj_cells until there are no cells left to
+        adjudicate.
+        '''
+        # We're done!
+        # - Start moving the gatherer phase
+        if not state.adj_effects:
+            state.call(TurnTrans.start_gatherer_movement,)
+            return
+
+        # Adjudicate next effect
+        row, col, effect_num = state.adj_effects.pop()
+        cell = state.board[row][col]
+        is_spend, amount, res = cell.card.active_effects()[effect_num]
+        if is_spend == SPEND_EFFECT:
+            state.spend_resources(res, amount)
+            state.call(TurnTrans.adjudicate_effects_loop)
+        else:
+            # place first resource on card
+            # Then ask where rest of them should go
+            # Inception callback??
+            after = (TurnTrans.adjudicate_effects_loop,)
+            state.call(TurnTrans.place_n, amount, row, col, res, after)
+
+    @staticmethod
+    def place_n(state, n, row, col, res, after):
+        '''
+        Do snake placement of n resources starting at (row, col).
+
+        Then call :after.
+        '''
+        state.place_info = dict(left=n, placements=[], after=after)
+        state.call(TurnTrans.place_n_loop, row, col, res)
+
+    @staticmethod
+    def place_n_loop(state, row, col, res):
+        # Place the resource
+        state.place_resources(row, col, res, 1)
+        state.place_info["left"] -= 1
+        state.placements["placements"].append((row, col))
+
+        # Decide what to do next
+        # - If that was the last resource...
+        #   - Call designated callback
+        # - Else keep placing
+        #   - Call designated callback
+        if state.place_info["left"] <= 0:
+            after = state.place_info["after"]
+            state.call(*after)
+            return
+        else:
+            vps = valid_placements(state.place_info["placements"])
+            state.prompt = "Choose placement"
+            state.choices = []
+            for row, col in vps:
+                after = (TurnTrans.place_n_loop, row, col, res)
+                state.choices.append(Choice(
+                    f"Position: ({row}, {col})",
+                    after,
+                ))
+
+    @staticmethod
+    def start_gatherer_movement(state):
+        move_cells = getmovecells()[::-1]
+
+        # No movements to be had
+        if not move_cells:
+            state.call(TurnTrans.end_turn)
+            return
+
+        # Do movements
+        state.move_cells = move_cells
+        state.call(TurnTrans.gatherer_movement_loop)
+
+    @staticmethod
+    def gatherer_movement_loop(state):
+        # Move gatherer
+        cell = state.move_cells.pop()
+        direction = cell.card.direction
+        row, col = state.move_gatherer(direction) # XXX check takes direction
+
+        # If last movement
+        # - Pick up all
+        # - Start next turn
+        if not state.move_cells:
+            state.pick_up_all(row, col)
+            state.call(TurnTrans.end_turn)
+            return
+
+        # No res on cell, keep on moving
+        cell = state.board[row][col]
+        res_choices = cell.res_choices()
+        if not res_choices:
+            state.call(TurnTrans.gatherer_movement_loop)
+            return
+
+        # Res on cell, choose what to pick up
+        state.prompt = "Choose resource to pick up"
+        state.choices = []
+        after = (TurnTrans.gatherer_movement_loop,)
+        for res in res_choices:
+            state.choices.append(Choice(
+                str(res), # XXX: Make pretty
+                after,
+            ))
+
 
 Coord = Tuple[int, int] # row, col
 
@@ -149,6 +345,7 @@ Coord = Tuple[int, int] # row, col
 @dataclass
 class State(BaseState):
     turn_num: int
+    acting_player_token: int
     p1_location: int
     p2_location: int
     gatherer_row: int
@@ -160,7 +357,20 @@ class State(BaseState):
 
     # Choice info for UI
     prompt: str
-    choices: List[str]
+    choices: List[Choice]
+
+    def call(self, *args):
+        '''
+        Call a state modifying function
+
+        This state (self) is injected as first argument in call. State
+        objects should never be passed in with :args.
+
+        args:
+          - 0: fxn
+          - (1, ...): fxn args
+        '''
+        return args[0](self, *args[1:])
 
     def from_state_key(cls, state_key):
         raise NotImplementedError()
@@ -169,8 +379,7 @@ class State(BaseState):
         raise NotImplementedError()
 
     def eligible_actions_lazy(self):
-        # choices are ~ ["0", "2", ...]
-        return [int(x) for x in self.choices]
+        raise NotImplementedError()
 
     def copy(self):
         pass
@@ -195,6 +404,7 @@ class State(BaseState):
             if cell.card.face_up:
                 continue
             cards.append(coord)
+        return cards
 
     def move_player(self, player, location):
         if player == 0:
@@ -337,17 +547,10 @@ class Environment(BaseEnvironment):
                 row.append(cell)
             board.append(row)
 
-        # Initial choice...
-        prompt = "Choose gatherer location"
-        phase = "setup"
-        subphase = "place_gatherer"
-        choices = []
-        for row in range(4):
-            for col in range(4):
-                choices.append(f"({row}, {col})")
-
-        return State(
+        state = State(
             acting_agent=acting_agent,
+            turn_num=0,
+            acting_player_token=0,
             p1_location=p1_location,
             p2_location=p2_location,
             gatherer_row=gatherer_row,
@@ -362,48 +565,16 @@ class Environment(BaseEnvironment):
             subphase=subphase,
         )
 
-    def transition(self, cstate, action) -> State:
-        state = cstate.copy()
+        # Do initial transitions
+        state.call(SetupTrans.setup)
 
-        if state.phase == "setup":
-            if state.sub_phase == "place_gatherer":
-                choice = state.choices[action]
-                row, col = parse_coords(choice)
-                state.gatherer_row = row
-                state.gatherer_col = col
+    def transition(self, state, action) -> State:
+        rstate = state.copy()
 
-                # Next transition
-                state.prompt = "Choose player location"
-                state.phase = state.phase # nothing changes
-                state.subphase = "place_p1"
-                state.choices = state.player_loc_choices(player=1)
-            elif state.sub_phase in ("place_p1", "place_p2"):
-                location = int(self.choices[action])
-                if state.sub_phase == "place_p1":
-                    state.p1_location = location
-                    state.choices = state.player_loc_choices(player=1)
-
-                    # Next transition
-                    state.prompt = state.prompt
-                    # state.phase = "player_movement" # nothing changes
-                    state.subphase = "place_p2"
-                    # state.choices = choices
-                else:
-                    p2_location = location
-                    state.choices = state.player_loc_choices(player=1)
-
-                    # Next transition
-                    state.prompt = "Move Player"
-                    state.phase = "player_movement" # nothing changes
-                    state.subphase = ""
-                    # state.choices = choices
-            else:
-                raise KeyError()
-
-        elif state.phase == "turn":
-            pass
-
-        return state
+        # Call the corresponding handler for the choice
+        choice = rstate.choices[action]
+        rstate.call(*choice.on_choice)
+        return rstate
 
     def parse_action_input(self, input_string):
         '''Used for converting human input to action'''
